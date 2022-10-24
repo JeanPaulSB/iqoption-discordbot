@@ -18,6 +18,9 @@ class Agent:
         self.type = "PRACTICE"
         self.balance = 0
         self.looping = False # this means wheter it is checking for scheduled signals
+        self.api_username = ''
+        self.api_password = ''
+        self.api_logged = False
 
     def setUser(self,user):
         self.user = user

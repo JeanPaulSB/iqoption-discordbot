@@ -35,6 +35,7 @@ async def register(ctx,*args):
     user = args[0]
     password = args[1]
     email = args[2]
+    token = args[3]
     client_id = ctx.message.author.id
 
     data = {
@@ -42,13 +43,25 @@ async def register(ctx,*args):
         'password':password,
         'clientid':client_id,
         'iqemail': email,
+        'token': token
     }
 
     response = requests.post('http://127.0.0.1:5000/register', json = data)
 
     print(response.json())
 
+async def loginapi(ctx,*args):
+    user  = args[0]
+    password = args[1]
+    email = args[2]
 
+    data = {
+        'username': username,
+        'password':password,
+        'iqemail':email
+    }
+
+    response = requests.post('http://127.0.0.1:5000/register',json = data)
 @bot.command()
 async def log(ctx,*args):
     user = args[0]
