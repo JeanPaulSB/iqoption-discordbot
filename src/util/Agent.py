@@ -21,6 +21,10 @@ class Agent:
         self.api_username = ''
         self.api_password = ''
         self.api_logged = False
+        self.signals = {
+
+        }
+        self.martinGala = False
 
     def setUser(self,user):
         self.user = user
@@ -35,6 +39,17 @@ class Agent:
         self.connection.change_balance(self.type)
     def checkMode(self) -> str:
         return self.type
+
+    
+    def setMartinGalaON(self):
+        self.martinGala = True
+    
+    def setMartinGalaOFF(self):
+        self.martinGala = False
+
+    def checkMartinGala(self) -> bool:
+        return self.martinGala
+
 
     def getBalance(self) -> float:
         self.balance = self.connection.get_balance()
@@ -52,6 +67,8 @@ class Agent:
 
     def scheduleSignal(self, signal):
         self.scheduled_signals.append(signal)
+
+
     def getScheduledSignals(self) -> list or bool:
         signals = self.scheduled_signals if len(self.scheduled_signals) > 0 else False
         return signals

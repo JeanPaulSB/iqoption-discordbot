@@ -18,7 +18,7 @@ class Signal:
         self.direction = direction
         self.user_id = user_id
         self.created_at = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        self.martin_gala = False
+
         self.scheduled = False
         self.planned_to_exc = 0
         

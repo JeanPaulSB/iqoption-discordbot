@@ -22,6 +22,7 @@ TODO:
 - Add emojis to unsuccesfully login and embed message
 - implement martin gala 
 - let users define its timestamp
+- add embed message to now command
 """
 
 @bot.event
@@ -86,6 +87,7 @@ async def signal(ctx,*args):
         signal = util.Signal(int(args[0]),args[1],args[2],user,int(args[3]))
         
         result = signal.buyNow(Agent.connection)
+        Agent.signals[signal.id] = signal
 
         await util.printLastPosition(result, ctx, signal,Agent)
 
@@ -150,6 +152,7 @@ async def schedulesignal(ctx,*args):
     if Agent.logged:
         user = ctx.message.author.id
         signal = util.Signal(int(args[0]),args[1],args[2],user,int(args[3]),args[4])
+        
         signal.scheduled = True
         signal.planned_to_exc = args[4]
         Agent.scheduleSignal(signal)
@@ -179,7 +182,7 @@ async def getscheduleds(ctx):
             await ctx.send("There aro no scheduleds signals")
 
 # function for checking the scheduleds signals in the array and seeing if it's the correct datetime
-@tasks.loop(seconds = 5)
+@tasks.loop(seconds = 3)
 async def loopingSchedules(ctx):
     
     now = datetime.now().strftime("%H:%M").split(":")
@@ -194,12 +197,77 @@ async def loopingSchedules(ctx):
                 
                
                 result = signal.buyNow(Agent.connection)
+                Agent.signals[signal.id] = signal
                 Agent.scheduled_signals.remove(signal)
                 await util.printLastPosition(result, ctx, signal,Agent)
 
     else:
         Agent.looping = False
         loopingSchedules.stop()
+
+"""
+>>> Martin Gala implementation
+"""
+
+@bot.command()
+async def setmgON(ctx):
+    if Agent.checkMartinGala():
+        # mg already on
+        await ctx.send("Martin gala already on")
+        
+        
+    else:
+        # set mg on
+        Agent.setMartinGalaON()
+        await ctx.send("Martin gala ON")
+        loopingMartinGala.start(ctx)
+
+@bot.command()
+async def setmgOFF(ctx):
+    if Agent.checkMartinGala():
+        # set mg OFF
+        Agent.setMartinGalaOFF()
+        loopingMartinGala.stop(ctx)
+        await ctx.send("Martin gala off")
+        pass
+    else:
+        # set mg already off
+        ctx.send("Martin gala already off")
+       
+        
+
+
+@bot.command()
+async def checkmg(ctx):
+    status = Agent.checkMartinGala()
+
+    await ctx.send(f"MG -> {status}")
+@tasks.loop(seconds = 1)
+async def loopingMartinGala(ctx):
+
+    if Agent.martinGala:
+        closed_positions = Agent.getClosedPositions()
+
+        filtered_positions = list(filter(lambda x: (datetime.now()-datetime.fromtimestamp(x['expired'])).seconds <= 4, closed_positions))
+        
+        # re filtering in order to just get lost positions
+
+        lost_positions = list(filter(lambda x: x['win'] == 'loose',filtered_positions))
+        
+        for position in lost_positions:
+            signal_time = (datetime.fromtimestamp(position['created'])-datetime.fromtimestamp(position['expired'])).seconds // 60
+
+            direction = Agent.signals[position['id']].direction
+            signal = Signal(position['amount']*2,position['active'],direction,signal_time)
+            signal.buyNow(Agent.connection)
+            await util.printLastPosition(result, ctx, signal,Agent)
+    else:
+        loopingMartinGala.stop()
+
+
+@bot.command()
+async def test(ctx):
+    print(Agent.signals)
 
 @bot.command()
 async def now(ctx):
