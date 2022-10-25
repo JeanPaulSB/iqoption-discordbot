@@ -124,7 +124,8 @@ async def real(ctx):
 @bot.command()
 async def balance(ctx):
     if Agent.logged:
-        await ctx.send(f"Your balance is -> {Agent.getBalance()}")
+        await util.printBalance(ctx,Agent.getBalance())
+
 @bot.command()
 async def getclosed(ctx):
     if Agent.logged:

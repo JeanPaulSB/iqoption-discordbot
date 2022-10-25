@@ -80,3 +80,9 @@ async def printClosedPosition(ctx,position):
             
 
         await ctx.send(embed = embedVar)
+
+async def printBalance(ctx,amount):
+    color = discord.Color.yellow()
+    embedVar = discord.Embed(title = "💳 BALANCE 💳", description= "Your balance in the current account mode", color = color)
+    embedVar.add_field(name = "Amount", value =f"💵 {amount} 💵")
+    await ctx.send(embed = embedVar)
