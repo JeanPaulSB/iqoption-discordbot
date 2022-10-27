@@ -14,7 +14,7 @@
 **All the commands start with the '$' prefix!**
 
 ## Account related commands:
-### - $login iqemail password
+### - $log iqemail password
     - description : it logs into you the IQOPTION broker (required for any command)
 ### - $real
     - description : sets your account to the real mode
@@ -33,8 +33,7 @@
 ## Operations related commands:
 ### - $signal money active direction expiration
     - description : buys instantaneously an active with the specified parameters
-    - note: by default expiration time is 1 minute
-    - example: $signal 5 AUDUSD put
+    - example: $signal 5 AUDUSD put 1
 ### - $schedulesignal money active direction expiration timestamp
     - description : allows you to schedule an operation at a specific timestamp
     - note: is almost the same as $signal except that it needs a timestamp argument in 24hr format
