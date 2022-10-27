@@ -92,14 +92,14 @@ async def signal(ctx,*args):
         await util.printLastPosition(result, ctx, signal,Agent)
 
     else:
-        await ctx.send("You must be logged before taking a signal!")
+        await util.printLoginRequired(ctx)
 
 @bot.command()
 async def checkMode(ctx):
     if Agent.logged:
         await ctx.send(f"Your current account mode is -> {Agent.checkMode()}")
     else:
-        await ctx.send(f"You are not logged!")
+        await util.printLoginRequired(ctx)
 
 @bot.command()
 async def practice(ctx):
@@ -110,7 +110,7 @@ async def practice(ctx):
             Agent.setPracticeMode()
             await ctx.send(f"Account mode sucessfully set to -> PRACTICE")
     else:
-        await ctx.send(f"You are not logged!")
+        await util.printLoginRequired(ctx)
 @bot.command()
 async def real(ctx):
     if Agent.logged:
@@ -120,7 +120,7 @@ async def real(ctx):
             Agent.setRealMode()
             await ctx.send(f"Account mode sucessfully set to -> REAL")
     else:
-        await ctx.send(f"You are not logged!")
+        await util.printLoginRequired(ctx)
 @bot.command()
 async def balance(ctx):
     if Agent.logged:
@@ -180,7 +180,7 @@ async def getscheduleds(ctx):
             for signal in scheduled_signals:
                 await util.printScheduledSignal(ctx, Agent, signal)
         else:
-            await ctx.send("There aro no scheduleds signals")
+            await util.printZeroScheduledSignals(ctx)
 
 # function for checking the scheduleds signals in the array and seeing if it's the correct datetime
 @tasks.loop(seconds = 3)
@@ -214,13 +214,13 @@ async def loopingSchedules(ctx):
 async def setmgON(ctx):
     if Agent.checkMartinGala():
         # mg already on
-        await ctx.send("Martin gala already on")
+        await util.printMartinGalaStatus(ctx, Agent)
         
         
     else:
         # set mg on
         Agent.setMartinGalaON()
-        await ctx.send("Martin gala ON")
+        await util.printMartinGalaON(ctx)
         loopingMartinGala.start(ctx)
 
 @bot.command()
@@ -228,51 +228,46 @@ async def setmgOFF(ctx):
     if Agent.checkMartinGala():
         # set mg OFF
         Agent.setMartinGalaOFF()
-        loopingMartinGala.stop(ctx)
-        await ctx.send("Martin gala off")
-        pass
+        loopingMartinGala.stop()
+        await util.printMartinGalaOFF(ctx)
+       
     else:
         # set mg already off
-        ctx.send("Martin gala already off")
+        await util.printMartinGalaStatus(ctx, Agent)
        
         
 
 
 @bot.command()
 async def checkmg(ctx):
-    status = Agent.checkMartinGala()
-
-    await ctx.send(f"MG -> {status}")
+    await util.printMartinGala(ctx, Agent)
 @tasks.loop(seconds = 1)
 async def loopingMartinGala(ctx):
+    if Agent.logged:
 
-    if Agent.martinGala:
-        closed_positions = Agent.getClosedPositions()
+        if Agent.martinGala:
+            closed_positions = Agent.getClosedPositions()
 
-        filtered_positions = list(filter(lambda x: (datetime.now()-datetime.fromtimestamp(x['expired'])).seconds <= 4, closed_positions))
+            filtered_positions = list(filter(lambda x: (datetime.now()-datetime.fromtimestamp(x['expired'])).seconds <= 4, closed_positions))
+            
+            # re filtering in order to just get lost positions
+
+            lost_positions = list(filter(lambda x: x['win'] == 'loose',filtered_positions))
+            
+            for position in lost_positions:
+                signal_time = (datetime.fromtimestamp(position['created'])-datetime.fromtimestamp(position['expired'])).seconds // 60
+
+                direction = Agent.signals[position['id']].direction
+                signal = Signal(position['amount']*2,position['active'],direction,signal_time)
+                signal.buyNow(Agent.connection)
+                await util.printLastPosition(result, ctx, signal,Agent)
         
-        # re filtering in order to just get lost positions
-
-        lost_positions = list(filter(lambda x: x['win'] == 'loose',filtered_positions))
-        
-        for position in lost_positions:
-            signal_time = (datetime.fromtimestamp(position['created'])-datetime.fromtimestamp(position['expired'])).seconds // 60
-
-            direction = Agent.signals[position['id']].direction
-            signal = Signal(position['amount']*2,position['active'],direction,signal_time)
-            signal.buyNow(Agent.connection)
-            await util.printLastPosition(result, ctx, signal,Agent)
-    else:
-        loopingMartinGala.stop()
 
 
-@bot.command()
-async def test(ctx):
-    print(Agent.signals)
 
 @bot.command()
 async def now(ctx):
     now = datetime.now()
-    await ctx.send(now)
+    await util.printClock(ctx,now)
 
 bot.run(token)
